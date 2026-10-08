@@ -26,7 +26,9 @@ When executing tasks using your tools, you must strictly adapt your behavior to 
 ### 4. Corsair Integration & Gmail Automation (`corsair-server`)
 - **Discovery:** Always use `list_operations` and `get_schema` to discover the exact API paths and parameter requirements for target operations before generating script payloads.
 - **Script Generation (`run_script`):** Write self-contained, asynchronous JavaScript code block executing Corsair commands. You must explicitly `return` the final result at the end of the script.
-- **Safety:** Always wrap API actions (e.g. sending emails or updating labels) in try-catch blocks to prevent script execution crashes.
+- **No Console Logging:** NEVER use `console.log()` inside `run_script` blocks because stdout is reserved for MCP JSONRPC communication.
+- **Gmail Send Signature:** When sending emails via `corsair.gmail.api.messages.send`, always pass `{ userId: "me", raw: base64url }` where `raw` is the base64url-encoded RFC 2822 email string.
+- **Safety:** Always wrap API actions in try-catch blocks to prevent script execution crashes.
 
 ## 🔄 Execution Example Workflow
 If a user requests: *"List files in workdir, calculate count times 50, fetch AI news, and email the report to manager@example.com"*
@@ -36,10 +38,11 @@ If a user requests: *"List files in workdir, calculate count times 50, fetch AI 
 4. **Call** the `run_script` tool on the Corsair server using a script similar to:
    ```javascript
    const body = `Report:\nFiles count: 11\nScore: 550\nNews: ...`;
+   const mime = `To: manager@example.com\r\nSubject: Report\r\nContent-Type: text/plain; charset=utf-8\r\n\r\n${body}`;
+   const base64url = Buffer.from(mime).toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
    const result = await corsair.gmail.api.messages.send({
-     message: {
-       raw: btoa(`To: manager@example.com\nSubject: Report\n\n${body}`)
-     }
+     userId: "me",
+     raw: base64url
    });
    return result;
    ```

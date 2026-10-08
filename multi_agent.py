@@ -1,11 +1,18 @@
 import asyncio
+import sys
 import os
 import json
+import logging
 from dotenv import load_dotenv
 from openai import OpenAI
 from mcp import StdioServerParameters, ClientSession
 from mcp.client.stdio import stdio_client
 from mcp.client.streamable_http import streamablehttp_client
+
+# Suppress background library log noise (MCP, Telethon, HTTPX, etc.)
+logging.basicConfig(level=logging.WARNING)
+for logger_name in ["mcp", "telethon", "httpx", "httpcore", "asyncio"]:
+    logging.getLogger(logger_name).setLevel(logging.WARNING)
 
 # 1. Load environment variables from .env file
 load_dotenv()
@@ -185,10 +192,15 @@ async def main():
                 }
             ]
 
-            # 9. Master Orchestrator Query (A multi-agent task!)
-            user_query = "Run a python code block inside the E2B Sandbox that calculates the first 10 Fibonacci numbers, write the results to a file named 'fib.txt' in the sandbox, and then read the file contents using the Analyst Agent. After that, send the contents of 'fib.txt' to my personal Telegram account (using my chat ID 5734120490) using the Communications Agent."
-            
-            print(f"\nUser Query: {user_query}\n")
+            # 9. Dynamic Orchestrator Query (from CLI arguments or interactive input)
+            if len(sys.argv) > 1:
+                user_query = " ".join(sys.argv[1:])
+            else:
+                user_query = input("\n📝 Enter task for Multi-Agent Orchestrator (or press Enter for default): ").strip()
+                if not user_query:
+                    user_query = "Run a python code block inside the E2B Sandbox that calculates the first 10 Fibonacci numbers, write the results to a file named 'fib.txt' in the sandbox, and then read the file contents using the Analyst Agent. After that, send the contents of 'fib.txt' to my personal Telegram account (using my chat ID 5734120490) using the Communications Agent."
+
+            print(f"\n💬 [LLM Orchestrator Input]: {user_query}\n")
 
             messages = [
                 {"role": "system", "content": SYSTEM_MESSAGE},

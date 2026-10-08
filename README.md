@@ -114,7 +114,8 @@ simpleAgent/
 ### Prerequisites
 - Python 3.12+ and `uv`
 - Node.js 18+ and `npx`
-- Docker (for the local filesystem server)
+- Docker or Podman (for the local containerized filesystem server)
+- PostgreSQL (for Corsair server OAuth token persistence)
 
 ### Environment
 Create a `.env` file in the project root:
@@ -122,6 +123,7 @@ Create a `.env` file in the project root:
 nemotron_api_key="your_nvidia_nemotron_api_key"
 smithery_api_key="your_smithery_api_key"
 E2B_API_KEY="your_e2b_api_key"
+DATABASE_URL="postgresql://postgres:password@localhost:5433/mydb"
 TELEGRAM_API_ID=123456
 TELEGRAM_API_HASH="your_telegram_api_hash"
 TELEGRAM_PHONE="+1234567890"
@@ -140,12 +142,12 @@ Enter the OTP sent to your Telegram client when prompted.
 
 ### Run the orchestrator-worker system
 ```bash
-.venv/bin/python multi_agent.py
+uv run multi_agent.py "Run a python script in E2B sandbox to calculate Fibonacci and send to Telegram"
 ```
 
 ### Run the single-agent version with skill injection
 ```bash
-.venv/bin/python index.py
+uv run index.py "Send an email to user@example.com with project updates"
 ```
 
 ---

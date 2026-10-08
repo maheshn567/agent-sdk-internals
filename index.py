@@ -1,12 +1,18 @@
 import asyncio
+import sys
 import os
 import json
+import logging
 from dotenv import load_dotenv
 from openai import OpenAI
 from mcp import StdioServerParameters, ClientSession
 from mcp.client.stdio import stdio_client
 from mcp.client.streamable_http import streamablehttp_client
 
+# Suppress background library log noise (MCP, Telethon, HTTPX, etc.)
+logging.basicConfig(level=logging.WARNING)
+for logger_name in ["mcp", "telethon", "httpx", "httpcore", "asyncio"]:
+    logging.getLogger(logger_name).setLevel(logging.WARNING)
 
 load_dotenv()
 
@@ -50,7 +56,7 @@ async def main():
 
     remote_url = f"https://server.smithery.ai/theagenttimes/news?api_key={api_key}"
     fs_server_params = StdioServerParameters(
-        command="docker",
+        command="podman",
         args=["run", "-i", "--rm", "-v", f"{current_dir}:/workdir", "ghcr.io/mark3labs/mcp-filesystem-server:latest", "/workdir"]
     )
     calc_server_params = StdioServerParameters(command=".venv/bin/python", args=["server.py"])
@@ -123,9 +129,18 @@ async def main():
                         f"Skill Guidelines:\n{playbook_instructions}"
                     )
                 })
+
+            # Dynamic User Query (from command line arguments or interactive input)
+            if len(sys.argv) > 1:
+                user_query = " ".join(sys.argv[1:])
+            else:
+                user_query = input("\n📝 Enter prompt for AI Agent (or press Enter for default): ").strip()
+                if not user_query:
+                    user_query = "Use the TelegramUserbot run_telethon_code tool to send a message to the recipient '+919591372601' with the text 'Hello Sathish! 👋 Hope you are having a fantastic and productive day ahead!'"
+
             messages.append({
                 "role": "user", 
-                "content": "Use the TelegramUserbot run_telethon_code tool to send a message to the recipient '+919591372601' with the text 'Sathish muthmare'"
+                "content": user_query
             })
 
             client = OpenAI(
@@ -133,7 +148,7 @@ async def main():
                 api_key=os.getenv("nemotron_api_key")
             )
 
-            print(f"\nUser Query: {messages[-1]['content']}\n")
+            print(f"\n💬 [LLM User Input]: {messages[-1]['content']}\n")
 
             # 4. LLM Loop (Proper multi-turn tracking)
             while True:
@@ -153,7 +168,7 @@ async def main():
                         tool_name = tool_call.function.name
                         args = json.loads(tool_call.function.arguments)
 
-                        print(f"Executing tool: {tool_name}")
+                        print(f"🤖 [LLM Requested Tool Call]: {tool_name}({json.dumps(args)})")
                         target_session = tool_to_session.get(tool_name)
                         
                         if target_session:
@@ -164,14 +179,14 @@ async def main():
                         else:
                             content_text = f"Error: Tool {tool_name} session missing."
                                 
-                        print(f"Tool Result:\n{content_text}\n")
+                        print(f"🛠️ [Tool Result Output]:\n{content_text}\n")
                         messages.append({
                             "role": "tool",
                             "tool_call_id": tool_call.id,
                             "content": content_text
                         })
                 else:
-                    print("=== FINAL SKILL-ADAPTED RESPONSE ===")
+                    print("✨ [LLM Final Response]:")
                     print(message.content)
                     break
 
