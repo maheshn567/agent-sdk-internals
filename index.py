@@ -145,7 +145,7 @@ async def main():
 
             client = OpenAI(
                 base_url="https://integrate.api.nvidia.com/v1",
-                api_key=os.getenv("NVIDIA_API_KEY") or os.getenv("nemotron_api_key")
+                api_key=os.getenv("API_KEY") or os.getenv("NVIDIA_API_KEY") or os.getenv("nemotron_api_key")
             )
 
             print(f"\n💬 [LLM User Input]: {messages[-1]['content']}\n")

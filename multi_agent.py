@@ -20,7 +20,7 @@ load_dotenv()
 # 2. Correctly initialize the Nvidia/Nemotron OpenAI Client
 client = OpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
-    api_key=os.getenv("NVIDIA_API_KEY") or os.getenv("nemotron_api_key")
+    api_key=os.getenv("API_KEY") or os.getenv("NVIDIA_API_KEY") or os.getenv("nemotron_api_key")
 )
 
 # 3. Define the Orchestrator Router instructions
