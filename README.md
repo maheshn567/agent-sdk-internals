@@ -120,7 +120,7 @@ simpleAgent/
 ### Environment
 Create a `.env` file in the project root:
 ```env
-nemotron_api_key="your_nvidia_nemotron_api_key"
+NVIDIA_API_KEY="your_nvidia_api_key"
 smithery_api_key="your_smithery_api_key"
 E2B_API_KEY="your_e2b_api_key"
 DATABASE_URL="postgresql://postgres:password@localhost:5433/mydb"
